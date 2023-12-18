@@ -25,6 +25,7 @@ async function walk(directory) {
 
 // Just in case they left a not-generated index.html file somewhere in the dump
 function checkIndexFile(content, indexDir, filename) {
+  if (path.basename(filename) != "index.html") return false;
   const headerMatch = content.match(expectedHeaderRegexp);
   if (!headerMatch) return false;
   const expectedPath = "/" + path.relative(indexDir, path.dirname(filename)).replace(/\\ /g, " ") + "/";
@@ -43,7 +44,7 @@ async function run() {
   for (let filename of indexFilenames) {
     const content = await fs.promises.readFile(filename, { encoding: "utf-8" });
     if (!checkIndexFile(content, indexDir, filename)) {
-      console.warn("Skipping possibly static index.html file at " + filename);
+      console.warn("Skipping possibly static html file at " + filename);
       continue;
     }
     const matches = content.matchAll(/^<a href="(.+?(?<!\/))">/gm);
@@ -54,6 +55,7 @@ async function run() {
       urls.push(`${url}\n dir=${dirname}\n out=${decodeURI(match[1])}`);
     }
   }
+  console.log("Parsed " + urls.length + " urls")
   await fs.promises.writeFile("urls.txt", urls.join("\n"));
 }
 
